@@ -21,6 +21,6 @@ public class NetworkHandler extends SimpleChannelInboundHandler<String> {
             System.out.println("Successful close connection with " + channel);
             return;
         }
-        System.out.println(message);
+        System.out.println("id" + Long.parseLong(channel.id().asShortText().toUpperCase(), 16) + ": " + message);
     }
 }

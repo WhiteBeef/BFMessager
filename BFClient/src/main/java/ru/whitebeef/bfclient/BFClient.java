@@ -1,62 +1,48 @@
 package ru.whitebeef.bfclient;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
+import ru.whitebeef.bfclient.commands.Command;
+import ru.whitebeef.bfclient.commands.ConnectCommand;
+import ru.whitebeef.bfclient.commands.HelpCommand;
+import ru.whitebeef.bfclient.managers.AbstractCommandManager;
+import ru.whitebeef.bfclient.managers.CommandManager;
+import ru.whitebeef.bfclient.managers.SimpleCommandManager;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Scanner;
 
 public class BFClient {
 
-    public static final boolean EPOLL = Epoll.isAvailable();
-
-    public BFClient() throws Exception {
+    public BFClient() {
+        System.out.println("Hello, client BFMessenger welcomes you! For a list of commands, type help");
         start();
-    }
 
-    private void start() throws Exception {
-        EventLoopGroup eventLoopGroup = EPOLL ? new EpollEventLoopGroup() : new NioEventLoopGroup();
-        try {
+        CommandManager cm = AbstractCommandManager.getInstance();
 
-            Channel channel = new Bootstrap()
-                    .group(eventLoopGroup)
-                    .channel(EPOLL ? EpollSocketChannel.class : NioSocketChannel.class)
-                    .handler(new ChannelInitializer<Channel>() {
-                        @Override
-                        protected void initChannel(Channel channel) throws Exception {
-                            channel.pipeline().addLast(new StringDecoder(StandardCharsets.UTF_8)).addLast(new StringEncoder(StandardCharsets.UTF_8));
-                        }
-                    }).connect("127.0.0.1", 8000).sync().channel();
-            System.out.println("Successful connected to " + channel);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-            String line;
-            while((line = bufferedReader.readLine()) != null) {
-                if(line.isEmpty())
-                    continue;
-                channel.writeAndFlush(line);
-                if(line.startsWith("exit")) {
-                    System.out.println("Waiting for disconnect..");
-                    channel.closeFuture().syncUninterruptibly();
-                    System.out.println("Disconnected!");
-                    break;
+        Scanner sc = new Scanner(System.in);
+        while(true) {
+            String str = sc.nextLine();
+            String cmd = str.split(" ", 2)[0];
+            String[] args = Arrays.stream(str.split(" ")).skip(1).toArray(String[]::new);
+            if(cm.hasCommand(cmd)) {
+                try {
+                    Command command = cm.getCommand(cmd);
+                    command.execute(args);
+                } catch(Exception ex) {
+                    System.out.println("Some troubles in command execution");
+                    System.err.println(ex.getMessage() + " " + ex.getCause());
                 }
             }
-
-        } finally {
-            eventLoopGroup.shutdownGracefully();
+            else {
+                System.out.println("'" + str + "' is unknown command! Type 'help' to see all available commands");
+            }
         }
     }
 
+    private void start() {
+        AbstractCommandManager.setInstance(new SimpleCommandManager());
+
+        registerCommands(new HelpCommand(), new ConnectCommand());
+    }
 
     public static void main(String[] args) {
         try {
@@ -65,6 +51,12 @@ public class BFClient {
             ex.printStackTrace();
         } finally {
             System.out.println("Bye bye!");
+        }
+    }
+
+    private void registerCommands(Command... commands) {
+        for(Command command : commands) {
+            AbstractCommandManager.getInstance().registerCommand(command);
         }
     }
 
