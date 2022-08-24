@@ -11,12 +11,21 @@
 
     <modules>
         <module>BFServer</module>
-        <module>ru.whitebeef.bfclient.BFClient</module>
+        <module>BFClient</module>
     </modules>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
         <maven.compiler.target>16</maven.compiler.target>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.68.Final</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 
 </project>
