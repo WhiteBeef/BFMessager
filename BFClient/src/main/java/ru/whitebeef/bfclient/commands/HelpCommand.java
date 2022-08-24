@@ -21,7 +21,12 @@ public class HelpCommand implements Command {
 
         CommandManager cm = AbstractCommandManager.getInstance();
 
-        cm.getCommands().forEach(command -> System.out.println("> " + command.getLabel() + " | " + command.getDescription()));
+        int maxLen = 0;
+        for(Command cmd : cm.getCommands()) {
+            maxLen = Math.max(maxLen, cmd.getLabel().length());
+        }
 
+        int finalMaxLen = maxLen;
+        cm.getCommands().forEach(command -> System.out.println("> " + command.getLabel() + " ".repeat(finalMaxLen - command.getLabel().length()) + " | " + command.getDescription()));
     }
 }

@@ -15,8 +15,6 @@ import io.netty.handler.codec.string.StringEncoder;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.regex.Matcher;
 
 public class ConnectCommand implements Command {
 
@@ -41,7 +39,6 @@ public class ConnectCommand implements Command {
         }
 
         args = args[0].split(":");
-
 
         if(args.length < 2) {
             writeErrorMessage();
